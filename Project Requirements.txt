@@ -1,10 +1,21 @@
-The project will use Python and SAS program packages in order to analyze the activity and the expansion possibilities of an organization. 
+The project will use Python and SAS program packages in order to analyze the activity and the expansion possibilities of an organization.
 
-The project will be made individually or in groups of 2 students for the same organization. 
+The project will be made individually or in groups of 2 students for the same organization.
 
 For each program package it is mandatory to use at least the following functionalities:
 
-SAS programming: combined or used separately, use minimum 8 of the following facilities: creating a SAS data set from external files, creating and using user-defined formats, iterative and conditional processing of data, creating data subsets, using SAS functions, combining data sets with specific SAS and SQL procedures, using arrays, using report procedures, using statistical procedures, generating graphs, SAS ML, SAS Viya.
+SAS programming: combined or used separately, use minimum 8 of the following facilities:
+- creating a SAS data set from external files;
+- creating and using user-defined formats;
+- iterative and conditional processing of data;
+- creating data subsets, using SAS functions;
+- combining data sets with specific SAS and SQL procedures;
+- using arrays;
+- using report procedures;
+- using statistical procedures;
+- generating graphs;
+- SAS ML;
+- SAS Viya.
 
 Python programming, combined or used separately, use minimum 8 of the following facilities in a Streamlit application:
 - the use of steamlit methods for display, graphic representations, etc.
@@ -24,10 +35,10 @@ b) Information required for solving
 c) Calculation methods, algorithms, calculation formulas used (as appropriate)
 d) Presentation of results (screen shot)
 e) Economic interpretation of results
-The project will be electronically and will contain the Word document and the specific files for working in SAS and Python. 
+The project will be electronically and will contain the Word document and the specific files for working in SAS and Python.
 
-The project will be archived and uploaded on online.ase.ro in 2 parts (1 - Python, 2 – SAS programming). Also, all the files belonging to a project will be included in a folder that has the complete name of the author(s) and their group. 
+The project will be archived and uploaded on online.ase.ro in 2 parts (1 - Python, 2 – SAS programming). Also, all the files belonging to a project will be included in a folder that has the complete name of the author(s) and their group.
 
-The organization that was chosen for exemplifying the exercises cannot be changed during developing the project. 
+The organization that was chosen for exemplifying the exercises cannot be changed during developing the project.
 
-Identical projects will have 0 points, even if at a previous evaluation they received another scoring. 
+Identical projects will have 0 points, even if at a previous evaluation they received another scoring.
