@@ -1794,7 +1794,7 @@ elif analysis_type == "Time Series Analysis":
 
 # Footer
 st.markdown("---")
-st.markdown("NYC Airbnb Data Analysis Project - SoftwarePackages 2024")
+st.markdown("NYC Airbnb Data Analysis Project - Software Packages 2025")
 
 # Add a download section for the reports and files
 with st.sidebar.expander("Download Reports"):
