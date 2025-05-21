@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import csv
 
 cleaned_file_path = "dataset/cleaned_AB_NYC_2019.csv"
 featured_file_path = "dataset/featured_AB_NYC_2019.csv"
@@ -24,7 +25,7 @@ try:
 
         # Fill NaT/NaN in 'days_since_last_review' (for listings with no reviews)
         # with a large placeholder value (e.g., 9999 days)
-        df['days_since_last_review'].fillna(9999, inplace=True)
+        df['days_since_last_review'] = df['days_since_last_review'].fillna(9999)
         print("Created 'days_since_last_review' column and filled missing values.")
     else:
         # If all last_review dates are NaT (e.g. after cleaning or in a subset)
@@ -42,7 +43,7 @@ try:
         print(df['days_since_last_review'].describe())
 
     # 3. Save the DataFrame with new features
-    df.to_csv(featured_file_path, index=False)
+    df.to_csv(featured_file_path, index=False, quoting=csv.QUOTE_ALL)
     print(f"\nDataFrame with new features saved to '{featured_file_path}', shape: {df.shape}")
 
 except FileNotFoundError:
