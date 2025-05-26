@@ -1,0 +1,623 @@
+\documentclass{article}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\geometry{margin=1in}
+
+\definecolor{codebackground}{rgb}{0.95,0.95,0.95}
+\definecolor{codecomment}{rgb}{0.0,0.5,0.0}
+\definecolor{codecommand}{rgb}{0.0,0.0,0.8}
+\definecolor{sasblue}{rgb}{0.0,0.2,0.6}
+
+\lstdefinestyle{SASStyle}{
+  language=SAS,
+  backgroundcolor=\color{codebackground},
+  commentstyle=\color{codecomment},
+  keywordstyle=\color{sasblue}\bfseries,
+  numberstyle=\tiny\color{gray},
+  basicstyle=\ttfamily\small,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  frame=single,
+  framesep=5pt,
+  xleftmargin=15pt,
+  rulecolor=\color{black!30}
+}
+
+\title{\textbf{Technical Analysis of SAS Import and Data Exploration Procedures}\\
+\Large{NYC Airbnb Data Processing Pipeline}}
+\author{NYCBnB Analytics Project\\
+\vspace{2cm}
+{\large\textbf{Created by:}\\
+\vspace{0.5cm}
+\large Miron Alin\\
+\large Nitu Tudor}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduction}
+This document provides a comprehensive technical analysis of the \texttt{import\_explore.sas} script used in the NYCBnB Analytics project. The script implements a sophisticated data pipeline for importing, processing, and analyzing Airbnb data from New York City. This analysis examines the technical implementation details, procedural choices, and analytical methodologies employed throughout the script.
+
+\subsection{Dataset Context}
+The analysis focuses on the Airbnb listings dataset for New York City (featured\_AB\_NYC\_2019.csv), which contains detailed information about available properties, including:
+\begin{itemize}[leftmargin=*]
+    \item Listing identifiers and metadata (ID, name, host information)
+    \item Geographic information (neighbourhood, neighbourhood\_group, latitude, longitude)
+    \item Property characteristics (room\_type)
+    \item Pricing information (price)
+    \item Availability metrics (minimum\_nights, availability\_365)
+    \item Review metrics (number\_of\_reviews, reviews\_per\_month, last\_review)
+    \item Host metrics (calculated\_host\_listings\_count)
+\end{itemize}
+
+\subsection{Technical Objectives}
+The script's primary technical objectives include:
+\begin{enumerate}[leftmargin=*]
+    \item Implementing efficient data import procedures for CSV-formatted data
+    \item Executing comprehensive data validation and quality assessment
+    \item Performing data transformation and feature engineering
+    \item Creating specialized data subsets for targeted analysis
+    \item Implementing descriptive, exploratory, and predictive analytics
+    \item Generating visualization outputs for data interpretation
+\end{enumerate}
+
+\section{Program Architecture and SAS Implementation Details}
+The SAS program \texttt{import\_explore.sas} is structured as a complete analytical pipeline that fulfills multiple SAS programming requirements while maintaining a logical workflow. The script demonstrates advanced proficiency in the following SAS functionality domains:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Data Access and Import:} Efficient file handling and CSV import techniques
+    \item \textbf{Data Transformation:} Advanced formatting, conditional logic, and variable creation
+    \item \textbf{Data Quality:} Validation procedures and statistical assessment of data properties
+    \item \textbf{Data Subsetting:} WHERE clause implementation and targeted dataset creation
+    \item \textbf{SQL Integration:} Utilizing PROC SQL for advanced aggregation and cross-tabulation
+    \item \textbf{Reporting:} Customized output formatting with PROC REPORT
+    \item \textbf{Visualization:} Statistical graphics generation with PROC SGPLOT
+    \item \textbf{Statistical Analysis:} Regression modeling with PROC REG
+    \item \textbf{Machine Learning:} Predictive modeling with PROC LOGISTIC
+\end{itemize}
+
+\section{Detailed Technical Analysis of Program Components}
+
+\subsection{Data Import Procedure Implementation}
+The program begins with a meticulously configured data import procedure, incorporating multiple efficiency and error-handling parameters:
+
+\begin{lstlisting}[style=SASStyle, caption=CSV Import Configuration]
+* SAS Program: import_explore.sas ;
+* Purpose: Import Airbnb data and perform initial exploration & formatting.;
+
+* Set a libname for where to store the SAS dataset (optional, can use WORK library too) ;
+* For this example, we'll use the WORK library which is temporary. ;
+* LIBNAME project "." ; * This would create a permanent library in the current directory. For now, WORK is fine.;
+
+* 1. Import the CSV file using DATA step with explicit variables ;
+FILENAME ABDATA "/home/u64208646/Project/featured_AB_NYC_2019.csv";
+
+DATA WORK.nyc_airbnb;
+    /* Use efficient INFILE options */
+    INFILE ABDATA DLM=',' MISSOVER DSD FIRSTOBS=2 TRUNCOVER;
+
+    /* INPUT statement with explicit variables */
+    INPUT
+        id $
+        name $
+        host_id $
+        host_name $
+        neighbourhood_group $
+        neighbourhood $
+        latitude
+        longitude
+        room_type $
+        price
+        minimum_nights
+        number_of_reviews
+        last_review $
+        reviews_per_month
+        calculated_host_listings_count
+        availability_365
+        has_reviews
+        days_since_last_review;
+RUN;
+
+FILENAME ABDATA CLEAR;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Details:}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{FILENAME} statement creates a file reference (\texttt{ABDATA}) to the CSV file, enabling access through a logical name rather than a physical path
+    \item \texttt{INFILE} statement employs multiple optimization parameters:
+    \begin{itemize}
+        \item \texttt{DLM=','} - Specifies comma as the delimiter character
+        \item \texttt{MISSOVER} - Prevents SAS from reading past the end of the current line when a specified variable is not found
+        \item \texttt{DSD} - Handles delimited data with embedded delimiters, allowing for quotes around text fields that may contain commas
+        \item \texttt{FIRSTOBS=2} - Skips the header row of the CSV file
+        \item \texttt{TRUNCOVER} - Reads records that are shorter than expected without generating errors
+    \end{itemize}
+    \item \texttt{INPUT} statement explicitly defines variable names and types:
+    \begin{itemize}
+        \item \texttt{\$} notation indicates character variables (e.g., \texttt{id \$})
+        \item Numeric variables are specified without type indicators (e.g., \texttt{price})
+    \end{itemize}
+    \item \texttt{FILENAME ABDATA CLEAR;} properly releases the file reference after import
+\end{itemize}
+
+This import configuration demonstrates advanced knowledge of SAS data handling, particularly regarding efficiency optimizations for large datasets and defensive programming practices to handle potential data quality issues.
+
+\subsection{Data Validation and Exploratory Analysis}
+Following import, the script implements a systematic approach to data validation and exploration through multiple complementary procedures:
+
+\begin{lstlisting}[style=SASStyle, caption=Data Validation and Initial Exploration]
+TITLE "Contents of Imported Data (Check Column Types)";
+PROC CONTENTS DATA=WORK.nyc_airbnb;
+RUN;
+
+TITLE "First 20 Rows of Imported Data (Check Data Alignment)";
+PROC PRINT DATA=WORK.nyc_airbnb (OBS=20);
+    VAR id name host_id host_name neighbourhood_group neighbourhood
+        latitude longitude room_type price minimum_nights number_of_reviews
+        last_review reviews_per_month calculated_host_listings_count
+        availability_365 has_reviews days_since_last_review;
+RUN;
+
+TITLE "Descriptive Statistics for Numerical Variables";
+PROC MEANS DATA=WORK.nyc_airbnb N MEAN STD MIN MAX Q1 MEDIAN Q3;
+    VAR price minimum_nights number_of_reviews reviews_per_month
+        calculated_host_listings_count availability_365 days_since_last_review;
+RUN;
+
+TITLE "Frequency Counts for Key Categorical Variables (Original Values)";
+PROC FREQ DATA=WORK.nyc_airbnb ORDER=FREQ;
+    TABLES neighbourhood_group room_type has_reviews / MISSING;
+RUN;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{PROC CONTENTS} provides metadata verification:
+    \begin{itemize}
+        \item Confirms correct variable types (character vs. numeric)
+        \item Validates dataset structure and properties
+        \item Reports on memory allocation and dataset characteristics
+        \item Identifies any automatic type conversions performed during import
+    \end{itemize}
+
+    \item \texttt{PROC PRINT} enables visual inspection of data:
+    \begin{itemize}
+        \item Limited to 20 observations for efficient review
+        \item Includes all variables to verify alignment and structure
+        \item Allows for detection of obvious data quality issues or import errors
+    \end{itemize}
+
+    \item \texttt{PROC MEANS} performs comprehensive univariate analysis:
+    \begin{itemize}
+        \item Calculates count of non-missing values (\texttt{N})
+        \item Computes central tendency measures (\texttt{MEAN}, \texttt{MEDIAN})
+        \item Determines dispersion metrics (\texttt{STD})
+        \item Reports range statistics (\texttt{MIN}, \texttt{MAX})
+        \item Calculates quartile boundaries (\texttt{Q1}, \texttt{Q3}) for distribution analysis
+    \end{itemize}
+
+    \item \texttt{PROC FREQ} analyzes categorical variable distributions:
+    \begin{itemize}
+        \item \texttt{ORDER=FREQ} sorts categories by frequency for immediate identification of dominant categories
+        \item \texttt{MISSING} option explicitly includes missing values in frequency counts
+        \item Focused on key categorical variables to understand data composition
+    \end{itemize}
+\end{itemize}
+
+This sequential validation approach demonstrates best practices in data quality assessment, providing both technical validation of the import process and initial exploratory insights into dataset characteristics.
+
+\subsection{Data Transformation and Feature Engineering}
+The script implements sophisticated data transformation techniques through custom formats and conditional processing:
+
+\begin{lstlisting}[style=SASStyle, caption=Format Definition and Variable Creation]
+* 3. Create User-Defined Formats ;
+TITLE "Creating and Applying User-Defined Formats";
+PROC FORMAT;
+    VALUE $neigh_group_fmt
+        'Bronx'         = 'Bronx'
+        'Brooklyn'      = 'Brooklyn'
+        'Manhattan'     = 'Manhattan'
+        'Queens'        = 'Queens'
+        'Staten Island' = 'Staten Island'
+        OTHER           = 'Other/Unknown';
+
+    VALUE $room_type_fmt
+        'Entire home/apt' = 'Entire Home/Apt'
+        'Private room'    = 'Private Room'
+        'Shared room'     = 'Shared Room'
+        OTHER             = 'Other/Unknown';
+
+    VALUE review_fmt /* Numeric format for has_reviews */
+        0 = 'No Reviews'
+        1 = 'Has Reviews'
+        . = 'Missing'
+        OTHER = 'Error';
+RUN;
+
+* Apply formats in a new data step for clarity and further processing ;
+DATA WORK.airbnb_processed;
+    SET WORK.nyc_airbnb;
+
+    FORMAT neighbourhood_group $neigh_group_fmt.
+           room_type $room_type_fmt.
+           has_reviews review_fmt.;
+
+    * 4. Data Step Enhancements: Conditional Processing & New Variables ;
+    * Create price_category ;
+    IF price <= 75 THEN price_category = 'Budget';
+    ELSE IF 75 < price <= 200 THEN price_category = 'Mid-Range';
+    ELSE IF price > 200 THEN price_category = 'Premium';
+    ELSE price_category = 'Unknown'; /* Should not happen if price is not missing */
+    LABEL price_category = "Price Category";
+
+    * Extract year_last_review (ensure last_review is handled correctly) ;
+    * Using a more straightforward approach to extract year from last_review;
+    year_last_review = .;
+    IF NOT MISSING(last_review) THEN
+        year_last_review = YEAR(INPUT(SUBSTR(last_review,1,10), B8601DA10.));
+    LABEL year_last_review = "Year of Last Review";
+    FORMAT year_last_review 4.;
+RUN;
+
+TITLE "Frequency of New Price Categories";
+PROC FREQ DATA=WORK.airbnb_processed ORDER=FREQ;
+    TABLES price_category;
+RUN;
+
+TITLE "Frequency of Year of Last Review";
+PROC FREQ DATA=WORK.airbnb_processed ORDER=FREQ;
+    TABLES year_last_review / MISSING; /* See distribution of review years */
+RUN;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{PROC FORMAT} creates custom data presentation formats:
+    \begin{itemize}
+        \item Character formats (\texttt{\$neigh\_group\_fmt}, \texttt{\$room\_type\_fmt}) standardize text display
+        \item Numeric format (\texttt{review\_fmt}) converts binary indicators to descriptive text
+        \item \texttt{OTHER} specifications provide defensive handling for unexpected values
+        \item Missing value specification (\texttt{.}) ensures proper handling of NULL values
+    \end{itemize}
+
+    \item Feature engineering in the DATA step:
+    \begin{itemize}
+        \item Format application enhances data interpretability while preserving original values
+        \item Conditional price categorization creates a derived business-relevant feature
+        \item Date string parsing extracts meaningful temporal information:
+        \begin{itemize}
+            \item \texttt{NOT MISSING()} check prevents errors on null date values
+            \item \texttt{SUBSTR()} extracts the date portion of the string
+            \item \texttt{INPUT()} with \texttt{B8601DA10.} informat converts ISO-format date strings
+            \item \texttt{YEAR()} extracts only the year component for analysis
+        \end{itemize}
+        \item \texttt{LABEL} statements provide descriptive metadata for derived variables
+        \item \texttt{FORMAT} statements control display properties for numeric output
+    \end{itemize}
+
+    \item Validation of transformations:
+    \begin{itemize}
+        \item \texttt{PROC FREQ} provides immediate verification of derived variable distributions
+        \item \texttt{ORDER=FREQ} prioritizes most common categories for quick assessment
+        \item \texttt{MISSING} option explicitly shows null values in the year variable
+    \end{itemize}
+\end{itemize}
+
+This transformation section demonstrates advanced SAS data manipulation techniques, combining format-based display enhancements with true data transformations to derive business-relevant features from raw data.
+
+\subsection{Strategic Data Subsetting for Targeted Analysis}
+The script implements targeted data subsetting to focus analysis on high-value segments:
+
+\begin{lstlisting}[style=SASStyle, caption=Specialized Data Subset Creation]
+* Create a subset: Manhattan listings with high availability ;
+DATA WORK.manhattan_high_avail;
+    SET WORK.airbnb_processed;
+    WHERE neighbourhood_group = 'Manhattan' AND availability_365 > 180;
+RUN;
+
+TITLE "Manhattan Listings with Availability > 180 days";
+PROC PRINT DATA=WORK.manhattan_high_avail (OBS=10);
+    VAR name neighbourhood_group room_type price availability_365;
+RUN;
+PROC MEANS DATA=WORK.manhattan_high_avail NOPRINT;
+    OUTPUT OUT=WORK.manhattan_stats (DROP=_TYPE_ _FREQ_) N=count_manhattan_high_avail;
+RUN;
+PROC PRINT DATA=WORK.manhattan_stats;
+    TITLE "Count of Manhattan Listings with Availability > 180 days";
+RUN;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item Subset creation leverages the \texttt{WHERE} clause for optimized filtering:
+    \begin{itemize}
+        \item Multiple criteria combined with \texttt{AND} operator
+        \item Geographic filtering on \texttt{neighbourhood\_group}
+        \item Availability threshold filtering (\texttt{>180} days) to identify high-availability listings
+    \end{itemize}
+
+    \item Subset validation and exploration:
+    \begin{itemize}
+        \item \texttt{PROC PRINT} with \texttt{OBS=10} provides a sample view of subset contents
+        \item Selected variables focus on key properties for this analysis
+        \item \texttt{PROC MEANS} with \texttt{NOPRINT} option suppresses detailed statistics
+        \item \texttt{OUTPUT} statement creates a derived dataset with only the count statistic
+        \item \texttt{DROP=\_TYPE\_ \_FREQ\_} removes automatically generated variables
+        \item Final \texttt{PROC PRINT} provides a clean report of the subset size
+    \end{itemize}
+\end{itemize}
+
+This subsetting approach demonstrates advanced analytical strategy by focusing on a specific market segment (Manhattan properties) with a particular characteristic (high availability) that may indicate investment opportunities or under-utilized inventory.
+
+\subsection{Advanced SQL-Based Aggregation Analysis}
+The script leverages PROC SQL for sophisticated aggregation and cross-tabulation:
+
+\begin{lstlisting}[style=SASStyle, caption=SQL-Based Aggregation and Cross-Tabulation]
+* 5. PROC SQL Query ;
+TITLE "Average Price and Count by Neighbourhood Group and Room Type";
+PROC SQL;
+    SELECT neighbourhood_group,
+           room_type,
+           COUNT(*) AS listing_count FORMAT=COMMA10.,
+           AVG(price) AS average_price FORMAT=DOLLAR8.2
+    FROM WORK.airbnb_processed
+    GROUP BY neighbourhood_group, room_type
+    ORDER BY neighbourhood_group, listing_count DESC;
+QUIT;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item SQL implementation provides enhanced analytical capabilities:
+    \begin{itemize}
+        \item Multi-dimensional grouping with \texttt{GROUP BY} on two categorical variables
+        \item Aggregation functions \texttt{COUNT(*)} and \texttt{AVG(price)} generate summary statistics
+        \item Column aliases improve output readability
+        \item Format specifications enhance display (\texttt{FORMAT=COMMA10.} and \texttt{FORMAT=DOLLAR8.2})
+        \item \texttt{ORDER BY} with multiple keys creates logical grouping by neighborhood with descending count
+    \end{itemize}
+\end{itemize}
+
+This SQL implementation demonstrates the complementary use of SQL syntax within SAS, leveraging SQL's concise syntax for multi-dimensional aggregation while maintaining SAS's output formatting capabilities.
+
+\subsection{Customized Reporting with PROC REPORT}
+The script implements sophisticated reporting capabilities:
+
+\begin{lstlisting}[style=SASStyle, caption=Customized Reporting Implementation]
+* 6. PROC REPORT ;
+TITLE "Listings Report for Brooklyn (Sample)";
+PROC REPORT DATA=WORK.airbnb_processed(OBS=100) NOWD HEADSKIP;
+    COLUMN name neighbourhood_group room_type price number_of_reviews availability_365;
+    DEFINE name / DISPLAY "Listing Name" WIDTH=40;
+    DEFINE neighbourhood_group / DISPLAY "Borough";
+    DEFINE room_type / ORDER "Room Type";
+    DEFINE price / ANALYSIS MEAN "Avg Price" FORMAT=DOLLAR8.2; /* Will show overall mean if no group */
+    DEFINE number_of_reviews / ANALYSIS SUM "Total Reviews";
+    DEFINE availability_365 / DISPLAY "Days Available";
+
+    WHERE neighbourhood_group = 'Brooklyn'; /* Filter for Brooklyn */
+
+    /* Example of breaking by room_type within Brooklyn and showing summary stats */
+    BREAK AFTER room_type / SUMMARIZE STYLE=Header{font_weight=bold};
+    RBREAK AFTER / SUMMARIZE STYLE=Header{font_weight=bold textalign=right}; /* Grand total summary */
+
+    COMPUTE AFTER room_type;
+        name = "Subtotal for " || room_type;
+    ENDCOMP;
+    COMPUTE AFTER;
+        name = "Grand Total for Brooklyn";
+    ENDCOMP;
+RUN;
+TITLE;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{PROC REPORT} configuration demonstrates advanced reporting techniques:
+    \begin{itemize}
+        \item \texttt{NOWD} option prevents windowing display for batch processing
+        \item \texttt{HEADSKIP} adds space after column headers for readability
+        \item \texttt{COLUMN} statement defines report structure and variable order
+        \item \texttt{DEFINE} statements customize each column's behavior and appearance:
+        \begin{itemize}
+            \item \texttt{DISPLAY} type for character data and direct numeric display
+            \item \texttt{ORDER} type for grouping variables (room\_type)
+            \item \texttt{ANALYSIS} type with statistical functions (\texttt{MEAN}, \texttt{SUM})
+            \item Custom headers with quoted strings
+            \item Width specification for text columns
+            \item Format specifications for numeric display
+        \end{itemize}
+        \item \texttt{BREAK} and \texttt{RBREAK} statements create summary rows:
+        \begin{itemize}
+            \item \texttt{AFTER room\_type} creates subtotals for each room type
+            \item \texttt{SUMMARIZE} generates summary statistics for analysis columns
+            \item \texttt{STYLE} options control the visual presentation of summary rows
+        \end{itemize}
+        \item \texttt{COMPUTE} blocks provide dynamic text for summary rows:
+        \begin{itemize}
+            \item \texttt{COMPUTE AFTER room\_type} generates subtotal labels
+            \item \texttt{COMPUTE AFTER} generates grand total labels
+            \item String concatenation with \texttt{||} creates dynamic text
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+This implementation demonstrates PROC REPORT's powerful capabilities for creating production-ready reports with complex grouping, summary statistics, and custom formatting.
+
+\subsection{Data Visualization with PROC SGPLOT}
+The script implements statistical graphics for visual data exploration:
+
+\begin{lstlisting}[style=SASStyle, caption=Statistical Graphics Implementation]
+* 7. PROC SGPLOT - Graphics ;
+TITLE "Average Price by Neighbourhood Group (SGPLOT)";
+PROC SGPLOT DATA=WORK.airbnb_processed;
+    VBAR neighbourhood_group / RESPONSE=price STAT=MEAN
+        DATALABEL DATALABELATTRS=(color=gray) GROUPDISPLAY=CLUSTER;
+    YAXIS LABEL="Average Price ($)";
+    XAXIS LABEL="Neighbourhood Group";
+RUN;
+TITLE;
+
+TITLE "Price vs. Number of Reviews (SGPLOT)";
+PROC SGPLOT DATA=WORK.airbnb_processed;
+    SCATTER X=number_of_reviews Y=price / GROUP=neighbourhood_group TRANSPARENCY=0.5;
+    YAXIS LABEL="Price ($)";
+    XAXIS LABEL="Number of Reviews";
+    KEYLEGEND / LOCATION=OUTSIDE POSITION=BOTTOM TITLE=""; /* Adjust legend */
+    /* Add a regression line for overall trend */
+    REG X=number_of_reviews Y=price / NOMARKERS LINEATTRS=(color=red thickness=2);
+RUN;
+TITLE;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item Bar chart implementation:
+    \begin{itemize}
+        \item \texttt{VBAR} creates vertical bar chart of categorical variable
+        \item \texttt{RESPONSE=price} specifies the analysis variable
+        \item \texttt{STAT=MEAN} calculates average price by neighborhood
+        \item \texttt{DATALABEL} adds value labels to bars
+        \item \texttt{DATALABELATTRS} customizes label appearance
+        \item \texttt{GROUPDISPLAY=CLUSTER} specifies bar arrangement
+        \item Axis labels provide context for the visualization
+    \end{itemize}
+
+    \item Scatter plot with regression line:
+    \begin{itemize}
+        \item \texttt{SCATTER} creates point plot of two continuous variables
+        \item \texttt{X=} and \texttt{Y=} specify the analysis variables
+        \item \texttt{GROUP=neighbourhood\_group} creates color-coded points by area
+        \item \texttt{TRANSPARENCY=0.5} reduces overplotting in dense regions
+        \item \texttt{KEYLEGEND} customizes the group legend placement
+        \item \texttt{REG} statement adds regression line to show overall relationship:
+        \begin{itemize}
+            \item \texttt{NOMARKERS} suppresses regression data points
+            \item \texttt{LINEATTRS} customizes line appearance
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+These visualizations demonstrate effective data communication techniques, with the bar chart providing categorical comparisons and the scatter plot revealing relationships between continuous variables while controlling for a categorical factor.
+
+\subsection{Statistical Analysis with PROC REG}
+The script implements regression analysis for relationship modeling:
+
+\begin{lstlisting}[style=SASStyle, caption=Linear Regression Implementation]
+* 8. PROC REG - Simple Linear Regression ;
+TITLE "Simple Linear Regression: Price vs. Number of Reviews";
+PROC REG DATA=WORK.airbnb_processed PLOTS(MAXPOINTS=NONE);
+    MODEL price = number_of_reviews;
+    /* Add more predictors here if desired, e.g., number_of_reviews minimum_nights */
+    /* PLOT R.*P.; */ /* Example for residual plots */
+RUN;
+QUIT;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item Regression analysis configuration:
+    \begin{itemize}
+        \item \texttt{PLOTS(MAXPOINTS=NONE)} disables point limiting for comprehensive visualization
+        \item \texttt{MODEL} statement specifies dependent and independent variables:
+        \begin{itemize}
+            \item \texttt{price} as the dependent (response) variable
+            \item \texttt{number\_of\_reviews} as the independent (predictor) variable
+        \end{itemize}
+        \item Commented options indicate potential enhancements:
+        \begin{itemize}
+            \item Additional predictors could extend the model
+            \item Residual plots could evaluate model fit and assumptions
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+This regression analysis provides quantitative assessment of the relationship between property price and review count, potentially revealing insights about pricing dynamics and market perception.
+
+\subsection{Machine Learning Implementation with PROC LOGISTIC}
+The script implements logistic regression for binary classification:
+
+\begin{lstlisting}[style=SASStyle, caption=Logistic Regression Implementation]
+* 9. PROC LOGISTIC - Predicting 'has_reviews' (SAS ML Example) ;
+TITLE "Logistic Regression: Predicting if a Listing Has Reviews";
+PROC LOGISTIC DATA=WORK.airbnb_processed DESCENDING; /* DESCENDING to model P(has_reviews=1) */
+    CLASS neighbourhood_group room_type / PARAM=REF REF=FIRST;
+    MODEL has_reviews = price minimum_nights calculated_host_listings_count availability_365
+                        neighbourhood_group room_type / SELECTION=FORWARD LINK=LOGIT TECHNIQUE=FISHER RSQUARE;
+    /* SELECTION=FORWARD for variable selection example */
+    /* TECHNIQUE=FISHER can be more stable for some datasets */
+    /* RSQUARE for pseudo R-squared measures */
+RUN;
+QUIT;
+\end{lstlisting}
+
+\noindent
+\textbf{Technical Implementation Analysis:}
+\begin{itemize}[leftmargin=*]
+    \item Logistic regression configuration demonstrates advanced modeling techniques:
+    \begin{itemize}
+        \item \texttt{DESCENDING} option models probability of \texttt{has\_reviews=1} (SAS defaults to modeling the lower value)
+        \item \texttt{CLASS} statement handles categorical predictors:
+        \begin{itemize}
+            \item \texttt{PARAM=REF} specifies reference parameterization for categorical variables
+            \item \texttt{REF=FIRST} uses the first level as the reference category
+        \end{itemize}
+        \item \texttt{MODEL} statement specifies multiple predictors:
+        \begin{itemize}
+            \item Numeric predictors: \texttt{price}, \texttt{minimum\_nights}, \texttt{calculated\_host\_listings\_count}, \texttt{availability\_365}
+            \item Categorical predictors: \texttt{neighbourhood\_group}, \texttt{room\_type}
+        \end{itemize}
+        \item Advanced modeling options:
+        \begin{itemize}
+            \item \texttt{SELECTION=FORWARD} implements automated variable selection
+            \item \texttt{LINK=LOGIT} specifies the logistic function as the link function
+            \item \texttt{TECHNIQUE=FISHER} uses Fisher's scoring method for optimization
+            \item \texttt{RSQUARE} requests pseudo-$R^2$ statistics to assess model fit
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
+This machine learning implementation demonstrates advanced predictive modeling, using logistic regression to identify factors that influence whether a listing receives reviews. The model combines continuous and categorical predictors with automated variable selection to create an optimized prediction model.
+
+\section{Conclusion and Technical Significance}
+The \texttt{import\_explore.sas} script exemplifies sophisticated SAS programming techniques across multiple domains of data processing and analysis. Key technical achievements include:
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Comprehensive Data Pipeline}: Implements a complete analytical workflow from raw data import through advanced predictive modeling
+    \item \textbf{Efficient Data Handling}: Demonstrates optimized techniques for processing complex text-based datasets
+    \item \textbf{Advanced Data Transformation}: Implements sophisticated feature engineering for business-relevant derived variables
+    \item \textbf{Multi-faceted Analysis}: Combines descriptive, exploratory, and predictive techniques for comprehensive insights
+    \item \textbf{Production-Ready Reporting}: Creates formatted, summarized outputs suitable for business consumption
+    \item \textbf{Statistical Modeling}: Implements both exploratory and confirmatory statistical techniques
+\end{itemize}
+
+The implementation satisfies all required SAS programming functionalities while maintaining a coherent analytical narrative focused on understanding and extracting value from the NYC Airbnb market data. The technical approaches demonstrated in this script establish a foundation for further advanced analytics in both the SAS and Python components of the NYCBnB Analytics project.
+
+\end{document}
